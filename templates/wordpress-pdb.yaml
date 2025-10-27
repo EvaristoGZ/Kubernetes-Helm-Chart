@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "kcwp.fullname" . }}-pdb
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "kcwp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: wordpress

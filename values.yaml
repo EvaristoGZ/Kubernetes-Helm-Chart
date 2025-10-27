@@ -1,0 +1,74 @@
+# Default values for kc-wordpress-k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# You can use -f values.yaml --set level1.level2.level3=value
+# to customize it or edit this file with your own customization.
+
+mariadb:
+  # -- Container image used for the database
+  image: mariadb:12.0.2
+  # -- StorageClass to use for MariaDB PVC
+  storageClassName: standard
+  # -- Size of the persistent volume for MariaDB
+  pvcSize: 1Gi
+  env:
+    # -- Name of the Kubernetes Secret with database credentials
+    secretName: database-connection
+    # -- Root password for the database (change in production)
+    rootPassword: rootpassworddefault
+    # -- Database name for WordPress
+    database: wordpress
+    # -- Database user for WordPress (change in production)
+    user: wpusuariodefault
+    # -- Database user password for WordPress (change in production)
+    password: wpcontrasenadefault
+
+wordpress:
+  # -- Number of WordPress pod replicas
+  replicas: 2
+  # -- Container image used for WordPress pod
+  image: wordpress:php8.4-apache
+  # -- StorageClass to use for WordPress PVC
+  storageClassName: standard
+  # -- Size of the persistent volume for wp-content
+  pvcSize: 1Gi
+  service:
+    # -- Kubernetes service type for WordPress
+    type: ClusterIP
+    # -- Port exposed by the WordPress service
+    port: 80
+  resources:
+    requests:
+      # -- Minimum CPU requested by WordPress
+      cpu: 100m
+      # -- Minimum memory requested by WordPress
+      memory: 128Mi
+    limits:
+      # -- Maximum CPU limit allowed for WordPress
+      cpu: 250m
+      # -- Maximum memory limit allowed for WordPress
+      memory: 256Mi
+  autoscaling:
+    # -- Enable Horizontal Pod Autoscaler (HPA) for WordPress
+    enabled: true
+    # -- Minimum number of WordPress replicas
+    minReplicas: 2
+    # -- Maximum number of WordPress replicas
+    maxReplicas: 5
+    # -- CPU utilization threshold for scaling WordPress
+    targetCPUUtilizationPercentage: 70
+  ingress:
+    # -- Enable Ingress resource for WordPress
+    enabled: true
+    # -- Hostname that exposes WordPress via Ingress
+    host: evaristogz.local.k8s
+    # -- Ingress controller that will handle traffic
+    className: nginx
+    # -- Additional annotations for the Ingress resource
+    annotations:
+      nginx.ingress.kubernetes.io/affinity: "cookie"
+      nginx.ingress.kubernetes.io/session-cookie-name: "wordpress-server"
+      nginx.ingress.kubernetes.io/session-cookie-expires: "86400"
+      nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+      nginx.ingress.kubernetes.io/session-cookie-path: "/"

@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kcwp.fullname" . }}-mariadb
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  serviceName: {{ include "kcwp.fullname" . }}-mariadb-headless
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "kcwp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mariadb
+  template:
+    metadata:
+      labels:
+        {{- include "kcwp.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: {{ .Values.mariadb.image }}
+          ports:
+            - name: mariadb
+              containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_DATABASE
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_USER
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_PASSWORD
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mariadb -u${MARIADB_USER} -p${MARIADB_PASSWORD} -h127.0.0.1 -e 'SELECT 1'"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mariadb -u${MARIADB_USER} -p${MARIADB_PASSWORD} -h127.0.0.1 -e 'SELECT 1'"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-data
+        labels:
+          {{- include "kcwp.labels" . | nindent 10 }}
+          app.kubernetes.io/component: database
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.mariadb.storageClassName }}
+        storageClassName: {{ .Values.mariadb.storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.pvcSize | default "1Gi" }}

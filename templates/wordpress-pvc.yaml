@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kcwp.fullname" . }}-wordpress
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.wordpress.pvcSize | default "1Gi" }}
+  {{- if .Values.wordpress.storageClassName }}
+  storageClassName: {{ .Values.wordpress.storageClassName }}
+  {{- end }}

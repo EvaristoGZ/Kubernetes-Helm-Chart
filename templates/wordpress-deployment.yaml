@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kcwp.fullname" . }}-wordpress
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.wordpress.replicas | default 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "kcwp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: wordpress
+  template:
+    metadata:
+      labels:
+        {{- include "kcwp.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: wordpress
+    spec:
+      securityContext:
+        fsGroup: 33
+        fsGroupChangePolicy: "OnRootMismatch"
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["wordpress"]
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: wordpress
+          image: {{ .Values.wordpress.image }}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: wordpress-content
+              mountPath: /var/www/html/wp-content
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: {{ default (printf "%s-mariadb" (include "kcwp.fullname" .)) .Values.wordpress.dbHost | quote }}
+            - name: WORDPRESS_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_DATABASE
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_USER
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default "database-connection" .Values.mariadb.env.secretName }}
+                  key: MARIADB_PASSWORD
+            - name: WORDPRESS_CONFIG_EXTRA
+              value: |
+                $proto = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http';
+                $host  = $_SERVER['HTTP_HOST'];
+                define('WP_HOME',    $proto . '://' . $host);
+                define('WP_SITEURL', $proto . '://' . $host);
+          resources:
+            {{- with .Values.wordpress.resources }}
+            limits:
+              cpu: {{ .limits.cpu | quote }}
+              memory: {{ .limits.memory | quote }}
+            requests:
+              cpu: {{ .requests.cpu | quote }}
+              memory: {{ .requests.memory | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            failureThreshold: 90
+            periodSeconds: 10
+      volumes:
+        - name: wordpress-content
+          persistentVolumeClaim:
+            claimName: {{ include "kcwp.fullname" . }}-wordpress
+

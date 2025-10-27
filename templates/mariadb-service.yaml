@@ -1,0 +1,38 @@
+# Servicio regular para acceso desde WordPress
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kcwp.fullname" . }}-mariadb
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kcwp.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mariadb
+  ports:
+    - name: mariadb
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+---
+# Servicio headless requerido por StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kcwp.fullname" . }}-mariadb-headless
+  labels:
+    {{- include "kcwp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Esto hace que sea headless
+  selector:
+    {{- include "kcwp.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mariadb
+  ports:
+    - name: mariadb
+      port: 3306
+      targetPort: mariadb
+      protocol: TCP

@@ -5,7 +5,7 @@
 
 ---
 
-[🔽 Ir directamente a Cómo desplegar kc-wordpress-k8s 🔽](https://github.com/KeepCodingCloudDevops12/EvaristoGZ_03-Kubernetes/blob/main/README.md#-c%C3%B3mo-desplegar-kc-wordpress-k8s)
+[🔽 Ir directamente a Cómo desplegar kc-wordpress-k8s 🔽](#-c%C3%B3mo-desplegar-kc-wordpress-k8s)
 
 ## Descripción
 *kc-wordpress-k8s* es un pequeño laboratorio de Kubernetes gestionado a través de Helm Chart en un entorno local con minikube. Éste despliega, al menos, dos réplicas de WordPress junto a una base de datos MariaDB.
@@ -19,7 +19,7 @@ Diagrama que contempla el resultado final de la arquitectura de microservicios d
 > Esta arquitectura no es la más idónea. Al usar minikube hay una limitación a nivel de almacenamiento, donde los StorageClass no dan RWX ni compartición entre nodos. Esto obliga a que todos los pods de WordPress se desplieguen en el mismo nodo y así se ha hecho mediante una regla de afinidad, para que pueda consultarse los datos de /wp-content/uploads.
 > A nivel de base de datos tampoco lo sería, puesto que habría que crear un clúster de MariaDB para que los datos estuviesen sincronizados a nivel de aplicación.
 
-![Diagrama de arquitectura de la aplicación desplegada en Kubernetes](https://github.com/KeepCodingCloudDevops12/EvaristoGZ_03-Kubernetes/blob/main/02%20-%20Diagrama%20Kubernetes%20-%20Evaristo%20GZ.drawio.jpg)
+![Diagrama de arquitectura de la aplicación desplegada en Kubernetes](https://github.com/EvaristoGZ/Kubernetes-Helm-Chart/blob/main/01%20-%20Diagrama%20Kubernetes%20-%20Evaristo%20GZ.drawio.jpg)
 
 ## Requisitos
 - Docker Engine (o Docker Desktop)
@@ -82,7 +82,7 @@ Edita el fichero host de tu sistema, en este caso *C:\Windows\System32\drivers\e
 ```
 
 ### 6. Instala el Helm Chart
-Consulta los valores personalizables [aquí](https://github.com/KeepCodingCloudDevops12/EvaristoGZ_03-Kubernetes/blob/main/README.md#-valores-personalizables).
+Consulta los valores personalizables [aquí](#-valores-personalizables).
 ```
 helm upgrade --install kc-wordpress-k8s ./ -n keepcoding --create-namespace \
 -f values.yaml \

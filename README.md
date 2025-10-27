@@ -235,7 +235,3 @@ Cuando instalas el Helm Chart, aparecerá un mensaje del tipo: `🏃  Starting t
 ### No puedo loguearme o me pide inicio de sesión constantemente
 Si no puedes loguearte tras instalar WordPress a través de http://evaristogz.local.k8s, prueba habilitar un service con
 `minikube service -n keepcoding kc-wordpress-k8s-wordpress` esto te habilitará una dirección URL del tipo http://127.0.0.1:XXXXX desde la que podrás acceder.
-
-Es posible que, de esta forma, se te pida hacer login en el backoffice con cierta frecuencia.
-
-Esto es debido al uso de cookies y siteurl que requieren de una configuración más extensa para solucionarlo.
